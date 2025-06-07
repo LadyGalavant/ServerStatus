@@ -1,16 +1,16 @@
-name: Conan Server Monitor
+name: Test
 
 on:
-  workflow_dispatch:  # Manual testing only for now
+  workflow_dispatch:
 
 jobs:
-  check-server:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - name: Test Discord Webhook
+    - name: Test Discord
       run: |
         echo "Testing webhook..."
-        curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+        curl -X POST "https://discord.com/api/webhooks/905960918075195462/9duCW7H-cNXj6bGefVLhXmdjPSOvDyjuV0TF79PWHnQoCJc_cdqyb6isJNlRCkf3wgEa" \
           -H "Content-Type: application/json" \
-          -d '{"content":"🧪 **Test message from GitHub Actions**"}'
-        echo "Test complete"
+          -d '{"content":"🧪 **Test from GitHub Actions**"}'
+        echo "Done"
