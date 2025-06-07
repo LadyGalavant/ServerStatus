@@ -11,20 +11,18 @@ jobs:
     steps:
     - name: Check Server Status
       run: |
-        echo "Checking server 104.243.40.213:8033..."
+        echo "Checking server via BattleMetrics API..."
         
-        # Install nmap for better server detection
-        sudo apt-get update && sudo apt-get install -y nmap
+        # Try using BattleMetrics to find the server
+        response=$(curl -s --connect-timeout 15 "https://api.battlemetrics.com/servers?filter[game]=conanexiles&filter[search]=104.243.40.213:8033" || echo "error")
         
-        # Check if port is open/responding
-        if nmap -p 8033 -sU --host-timeout 10s 104.243.40.213 | grep -q "open"; then
-          echo "Server is ONLINE"
-          MESSAGE="🟢 **Conan Server is ONLINE**"
-        elif nmap -p 8033 -sT --host-timeout 10s 104.243.40.213 | grep -q "open"; then
-          echo "Server is ONLINE"
+        echo "API response: $response"
+        
+        if echo "$response" | grep -q "104.243.40.213"; then
+          echo "Server found and ONLINE"
           MESSAGE="🟢 **Conan Server is ONLINE**"
         else
-          echo "Server appears OFFLINE"
+          echo "Server not found or OFFLINE"
           MESSAGE="🔴 **Conan Server is OFFLINE**"
         fi
         
@@ -32,3 +30,5 @@ jobs:
         curl -X POST "https://discord.com/api/webhooks/905960918075195462/9duCW7H-cNXj6bGefVLhXmdjPSOvDyjuV0TF79PWHnQoCJc_cdqyb6isJNlRCkf3wgEa" \
           -H "Content-Type: application/json" \
           -d "{\"content\":\"$MESSAGE\"}"
+        
+        echo "Notification sent"
