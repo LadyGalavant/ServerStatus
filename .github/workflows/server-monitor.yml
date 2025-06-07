@@ -11,19 +11,14 @@ jobs:
     steps:
     - name: Check Server Status
       run: |
-        echo "Checking server via BattleMetrics API..."
+        echo "Pinging server IP 104.243.40.213..."
         
-        # Try using BattleMetrics to find the server
-        response=$(curl -s --connect-timeout 15 "https://api.battlemetrics.com/servers?filter[game]=conanexiles&filter[search]=104.243.40.213:8033" || echo "error")
-        
-        echo "API response: $response"
-        
-        if echo "$response" | grep -q "104.243.40.213"; then
-          echo "Server found and ONLINE"
-          MESSAGE="🟢 **Conan Server is ONLINE**"
+        if ping -c 3 -W 5 104.243.40.213 > /dev/null 2>&1; then
+          echo "Server IP is responding"
+          MESSAGE="🟢 **Conan Server IP is responding** (likely online)"
         else
-          echo "Server not found or OFFLINE"
-          MESSAGE="🔴 **Conan Server is OFFLINE**"
+          echo "Server IP is not responding"
+          MESSAGE="🔴 **Conan Server IP is not responding** (likely offline)"
         fi
         
         echo "Sending: $MESSAGE"
