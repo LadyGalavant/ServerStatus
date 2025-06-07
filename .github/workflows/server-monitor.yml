@@ -1,16 +1,29 @@
-name: Test
+name: Conan Server Monitor
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '*/2 * * * *'  # Every 2 minutes
+  workflow_dispatch:  # Manual testing
 
 jobs:
-  test:
+  check-server:
     runs-on: ubuntu-latest
     steps:
-    - name: Test Discord
+    - name: Check Server Status
       run: |
-        echo "Testing webhook..."
+        echo "Checking server 104.243.40.213:8033..."
+        
+        if timeout 10 nc -z 104.243.40.213 8033; then
+          echo "Server is ONLINE"
+          MESSAGE="🟢 **Conan Server is ONLINE**"
+        else
+          echo "Server is OFFLINE" 
+          MESSAGE="🔴 **Conan Server is OFFLINE**"
+        fi
+        
+        echo "Sending: $MESSAGE"
         curl -X POST "https://discord.com/api/webhooks/905960918075195462/9duCW7H-cNXj6bGefVLhXmdjPSOvDyjuV0TF79PWHnQoCJc_cdqyb6isJNlRCkf3wgEa" \
           -H "Content-Type: application/json" \
-          -d '{"content":"🧪 **Test from GitHub Actions**"}'
-        echo "Done"
+          -d "{\"content\":\"$MESSAGE\"}"
+        
+        echo "Notification sent"
