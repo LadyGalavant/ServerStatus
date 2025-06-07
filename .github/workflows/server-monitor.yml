@@ -13,18 +13,22 @@ jobs:
       run: |
         echo "Checking server 104.243.40.213:8033..."
         
-        # Try a different connection method
-        if curl -s --connect-timeout 10 telnet://104.243.40.213:8033 </dev/null; then
+        # Install nmap for better server detection
+        sudo apt-get update && sudo apt-get install -y nmap
+        
+        # Check if port is open/responding
+        if nmap -p 8033 -sU --host-timeout 10s 104.243.40.213 | grep -q "open"; then
+          echo "Server is ONLINE"
+          MESSAGE="🟢 **Conan Server is ONLINE**"
+        elif nmap -p 8033 -sT --host-timeout 10s 104.243.40.213 | grep -q "open"; then
           echo "Server is ONLINE"
           MESSAGE="🟢 **Conan Server is ONLINE**"
         else
-          echo "Server appears OFFLINE (or not responding to this check)"
-          MESSAGE="🔴 **Conan Server is OFFLINE or not responding**"
+          echo "Server appears OFFLINE"
+          MESSAGE="🔴 **Conan Server is OFFLINE**"
         fi
         
         echo "Sending: $MESSAGE"
         curl -X POST "https://discord.com/api/webhooks/905960918075195462/9duCW7H-cNXj6bGefVLhXmdjPSOvDyjuV0TF79PWHnQoCJc_cdqyb6isJNlRCkf3wgEa" \
           -H "Content-Type: application/json" \
           -d "{\"content\":\"$MESSAGE\"}"
-        
-        echo "Notification sent"
