@@ -1,0 +1,49 @@
+name: Conan Server Monitor
+
+on:
+  schedule:
+    - cron: '*/2 * * * *'  # Every 2 minutes
+  workflow_dispatch:  # Allows manual testing
+
+jobs:
+  check-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Server Status
+      run: |
+        # Check if server is responding
+        if timeout 10 bash -c 'cat < /dev/null > /dev/tcp/104.243.40.213/8033'; then
+          echo "SERVER_STATUS=online" >> $GITHUB_ENV
+        else
+          echo "SERVER_STATUS=offline" >> $GITHUB_ENV
+        fi
+        
+    - name: Get Previous Status
+      run: |
+        # Try to get previous status from artifact
+        PREV_STATUS=$(curl -s "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | grep -o '"name":"status-[^"]*"' | head -1 | cut -d'-' -f2 | tr -d '"')
+        echo "PREV_STATUS=${PREV_STATUS:-unknown}" >> $GITHUB_ENV
+        
+    - name: Send Discord Notification
+      if: env.SERVER_STATUS != env.PREV_STATUS
+      run: |
+        if [ "${{ env.SERVER_STATUS }}" = "online" ]; then
+          MESSAGE="🟢 **Conan Server is ONLINE**"
+        else
+          MESSAGE="🔴 **Conan Server is OFFLINE**"
+        fi
+        
+        curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"$MESSAGE\"}"
+          
+    - name: Save Current Status
+      run: |
+        echo "${{ env.SERVER_STATUS }}" > status.txt
+        
+    - name: Upload Status Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: status-${{ env.SERVER_STATUS }}
+        path: status.txt
+        retention-days: 1
