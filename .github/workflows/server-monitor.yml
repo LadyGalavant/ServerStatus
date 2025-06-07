@@ -13,12 +13,13 @@ jobs:
       run: |
         echo "Checking server 104.243.40.213:8033..."
         
-        if timeout 10 nc -z 104.243.40.213 8033; then
+        # Try a different connection method
+        if curl -s --connect-timeout 10 telnet://104.243.40.213:8033 </dev/null; then
           echo "Server is ONLINE"
           MESSAGE="🟢 **Conan Server is ONLINE**"
         else
-          echo "Server is OFFLINE" 
-          MESSAGE="🔴 **Conan Server is OFFLINE**"
+          echo "Server appears OFFLINE (or not responding to this check)"
+          MESSAGE="🔴 **Conan Server is OFFLINE or not responding**"
         fi
         
         echo "Sending: $MESSAGE"
